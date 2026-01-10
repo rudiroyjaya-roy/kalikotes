@@ -1,0 +1,722 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>OpsManager - Aplikasi Operasional</title>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --bg-body: #f8fafc;
+            --bg-card: #ffffff;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+            --radius: 12px;
+        }
+
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            margin: 0;
+            padding: 0;
+            line-height: 1.5;
+            padding-bottom: 80px; /* Space for bottom nav */
+        }
+
+        /* Typography */
+        h1, h2, h3 { margin: 0; font-weight: 700; }
+        .text-muted { color: var(--text-muted); font-size: 0.875rem; }
+
+        /* Layout */
+        .container {
+            padding: 20px;
+            max-width: 500px;
+            margin: 0 auto;
+        }
+
+        .view { display: none; }
+        .view.active { display: block; animation: fadeIn 0.3s ease; }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Card Style */
+        .card {
+            background: var(--bg-card);
+            border-radius: var(--radius);
+            padding: 16px;
+            margin-bottom: 16px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            border: 1px solid var(--border);
+        }
+
+        /* Forms */
+        .form-group { margin-bottom: 16px; }
+        label { display: block; font-weight: 600; margin-bottom: 6px; font-size: 0.9rem; }
+        input, select, textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 1rem;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        input:focus { border-color: var(--primary); }
+
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+        /* Buttons */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            width: 100%;
+            font-size: 1rem;
+            transition: opacity 0.2s;
+        }
+        .btn:active { opacity: 0.7; }
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-success { background: var(--success); color: white; }
+        .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text-main); }
+        .btn-danger { background: var(--danger); color: white; }
+
+        /* Navigation */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 70px;
+            background: white;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            border-top: 1px solid var(--border);
+            z-index: 100;
+            padding-bottom: env(safe-area-inset-bottom);
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-decoration: none;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+            border: none;
+            background: none;
+            cursor: pointer;
+            flex: 1;
+        }
+
+        .nav-item.active { color: var(--primary); }
+        .nav-item svg { width: 24px; height: 24px; margin-bottom: 4px; }
+
+        /* Dashboard Components */
+        .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px; }
+        .stat-card { padding: 16px; border-radius: var(--radius); color: white; }
+        .bg-blue { background: var(--primary); }
+        .bg-green { background: var(--success); }
+        .stat-val { font-size: 1.5rem; font-weight: 800; display: block; }
+        .stat-label { font-size: 0.8rem; opacity: 0.9; }
+
+        /* Badge & Status */
+        .badge {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+        .badge-success { background: #dcfce7; color: #166534; }
+        .badge-danger { background: #fee2e2; color: #991b1b; }
+
+        /* Modal / Detail View */
+        .modal {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.5);
+            display: none;
+            z-index: 200;
+            justify-content: center;
+            align-items: flex-end;
+        }
+        .modal.active { display: flex; }
+        .modal-content {
+            background: white;
+            width: 100%;
+            max-width: 500px;
+            border-radius: 20px 20px 0 0;
+            padding: 24px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        /* List Styling */
+        .list-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--border);
+        }
+        .list-item:last-child { border-bottom: none; }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--text-muted);
+        }
+    </style>
+</head>
+<body>
+
+    <!-- APP HEADER -->
+    <header class="container" style="padding-bottom: 0;">
+        <h1 id="view-title">Dashboard</h1>
+        <p class="text-muted" id="current-date"></p>
+    </header>
+
+    <main class="container">
+        
+        <!-- MODULE 3: DASHBOARD -->
+        <div id="view-dashboard" class="view active">
+            <div class="stat-grid">
+                <div class="stat-card bg-blue">
+                    <span class="stat-label">Jenis Bahan</span>
+                    <span id="dash-total-items" class="stat-val">0</span>
+                </div>
+                <div class="stat-card bg-green">
+                    <span class="stat-label">Barang Masuk</span>
+                    <span id="dash-total-incoming" class="stat-val">0</span>
+                </div>
+            </div>
+
+            <h3>Status Operasional</h3>
+            <div id="dash-alerts" style="margin-top: 12px;">
+                <!-- Alerts will appear here -->
+            </div>
+
+            <h3 style="margin-top: 20px; margin-bottom: 12px;">Ringkasan Kebutuhan</h3>
+            <div id="dash-summary-list">
+                <!-- List of calculated needs -->
+            </div>
+        </div>
+
+        <!-- MODULE 1: KALKULATOR -->
+        <div id="view-calculator" class="view">
+            <div class="card">
+                <div class="form-group">
+                    <label>Mode Satuan Dasar</label>
+                    <select id="calc-mode">
+                        <option value="PCS">PCS</option>
+                        <option value="KG">KG</option>
+                        <option value="LITER">LITER</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Nama Bahan</label>
+                    <input type="text" id="calc-name" placeholder="Contoh: Telur, Beras, Susu">
+                </div>
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label>Jumlah Orang</label>
+                        <input type="number" id="calc-people" value="1">
+                    </div>
+                    <div class="form-group">
+                        <label>Porsi per Orang</label>
+                        <input type="number" id="calc-portion" step="0.01" value="1">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Buffer (%)</label>
+                    <input type="number" id="calc-buffer" value="10">
+                </div>
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label>Nama Kemasan</label>
+                        <input type="text" id="calc-pkg-name" placeholder="Box, Karung, Literan">
+                    </div>
+                    <div class="form-group">
+                        <label>Isi per Kemasan</label>
+                        <input type="number" id="calc-pkg-size" value="1">
+                    </div>
+                </div>
+                <button class="btn btn-primary" onclick="calculateNeed()">Hitung & Tampilkan</button>
+            </div>
+
+            <div id="calc-result" class="card" style="display:none; border-left: 4px solid var(--primary);">
+                <h3 style="color: var(--primary);">Hasil Perhitungan</h3>
+                <div class="list-item">
+                    <span>Kebutuhan Dasar:</span>
+                    <b id="res-base">0</b>
+                </div>
+                <div class="list-item">
+                    <span>Nilai Buffer:</span>
+                    <b id="res-buffer">0</b>
+                </div>
+                <div class="list-item" style="border-bottom: 2px solid var(--border);">
+                    <span>Total Akhir:</span>
+                    <b id="res-total" style="font-size: 1.2rem;">0</b>
+                </div>
+                <div class="list-item">
+                    <span>Estimasi Kemasan:</span>
+                    <b id="res-pkg" style="color: var(--success);">0</b>
+                </div>
+                <button class="btn btn-success" style="margin-top: 15px;" onclick="saveToDashboard()">Simpan ke Dashboard</button>
+            </div>
+        </div>
+
+        <!-- MODULE 2: BARANG MASUK -->
+        <div id="view-incoming" class="view">
+            <button class="btn btn-primary" style="margin-bottom: 16px;" onclick="showIncomingForm()">+ Tambah Barang Masuk</button>
+            
+            <div id="incoming-list">
+                <!-- List of incoming items -->
+            </div>
+        </div>
+
+    </main>
+
+    <!-- NAVIGATION -->
+    <nav class="bottom-nav">
+        <button class="nav-item active" onclick="switchView('dashboard', this)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+            Dashboard
+        </button>
+        <button class="nav-item" onclick="switchView('calculator', this)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect><path d="M9 14h6"></path><path d="M12 11v6"></path></svg>
+            Kalkulator
+        </button>
+        <button class="nav-item" onclick="switchView('incoming', this)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+            Barang Masuk
+        </button>
+    </nav>
+
+    <!-- MODAL FORM BARANG MASUK -->
+    <div id="modal-incoming" class="modal">
+        <div class="modal-content">
+            <h2 id="modal-title">Catat Barang Masuk</h2>
+            <div style="margin-top: 20px;">
+                <input type="hidden" id="edit-id">
+                <div class="form-group">
+                    <label>Tanggal</label>
+                    <input type="date" id="in-date">
+                </div>
+                <div class="form-group">
+                    <label>Nama Bahan</label>
+                    <input type="text" id="in-name">
+                </div>
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label>Mode</label>
+                        <select id="in-mode">
+                            <option value="PCS">PCS</option>
+                            <option value="KG">KG</option>
+                            <option value="LITER">LITER</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Supplier</label>
+                        <input type="text" id="in-supplier">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>No. Surat Jalan / Invoice</label>
+                    <input type="text" id="in-invoice">
+                </div>
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label>Nama Kemasan</label>
+                        <input type="text" id="in-pkg-name">
+                    </div>
+                    <div class="form-group">
+                        <label>Isi per Kemasan</label>
+                        <input type="number" id="in-pkg-size" oninput="calcIncomingTotal()">
+                    </div>
+                </div>
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label>Jml Kemasan Datang</label>
+                        <input type="number" id="in-qty-pkg" oninput="calcIncomingTotal()">
+                    </div>
+                    <div class="form-group">
+                        <label>Total Aktual (Auto)</label>
+                        <input type="number" id="in-total-actual">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Kondisi Barang</label>
+                    <select id="in-condition" onchange="toggleDamageField()">
+                        <option value="baik">Baik</option>
+                        <option value="rusak">Rusak</option>
+                    </select>
+                </div>
+                <div id="damage-fields" style="display: none; padding: 12px; background: #fff5f5; border-radius: 8px; margin-bottom: 16px;">
+                    <div class="form-group">
+                        <label>Jumlah Rusak</label>
+                        <input type="number" id="in-qty-damage" value="0">
+                    </div>
+                    <div class="form-group">
+                        <label>Keterangan Kerusakan</label>
+                        <textarea id="in-damage-note"></textarea>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Bukti Penerimaan (Nama File/No. Foto)</label>
+                    <input type="text" id="in-evidence" placeholder="Contoh: IMG_001.jpg">
+                </div>
+                <div class="form-group">
+                    <label>Catatan Tambahan</label>
+                    <textarea id="in-note"></textarea>
+                </div>
+                
+                <div class="grid-2">
+                    <button class="btn btn-outline" onclick="closeModal()">Batal</button>
+                    <button class="btn btn-primary" onclick="saveIncoming()">Simpan Data</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL DETAIL VIEW -->
+    <div id="modal-detail" class="modal">
+        <div class="modal-content" id="detail-content">
+            <!-- Content dynamic -->
+        </div>
+    </div>
+
+    <script>
+        // STATE MANAGEMENT
+        let needs = JSON.parse(localStorage.getItem('ops_needs')) || [];
+        let incoming = JSON.parse(localStorage.getItem('ops_incoming')) || [];
+
+        // INITIALIZATION
+        window.onload = () => {
+            document.getElementById('current-date').innerText = new Date().toLocaleDateString('id-ID', { 
+                weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' 
+            });
+            renderDashboard();
+            renderIncoming();
+        };
+
+        // NAVIGATION LOGIC
+        function switchView(viewId, el) {
+            document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+            
+            document.getElementById('view-' + viewId).classList.add('active');
+            el.classList.add('active');
+            
+            const titles = {
+                'dashboard': 'Dashboard',
+                'calculator': 'Kalkulator Kebutuhan',
+                'incoming': 'Penerimaan Barang'
+            };
+            document.getElementById('view-title').innerText = titles[viewId];
+        }
+
+        // MODULE 1: CALCULATOR LOGIC
+        let tempCalculation = null;
+
+        function calculateNeed() {
+            const mode = document.getElementById('calc-mode').value;
+            const name = document.getElementById('calc-name').value;
+            const people = parseFloat(document.getElementById('calc-people').value) || 0;
+            const portion = parseFloat(document.getElementById('calc-portion').value) || 0;
+            const bufferPct = parseFloat(document.getElementById('calc-buffer').value) || 0;
+            const pkgName = document.getElementById('calc-pkg-name').value || 'Pcs';
+            const pkgSize = parseFloat(document.getElementById('calc-pkg-size').value) || 1;
+
+            if (!name) { alert('Masukkan nama bahan!'); return; }
+
+            const base = people * portion;
+            const bufferVal = base * (bufferPct / 100);
+            const total = base + bufferVal;
+            const pkgQty = Math.ceil(total / pkgSize);
+
+            tempCalculation = {
+                id: Date.now(),
+                name, mode, base, bufferVal, total, pkgQty, pkgName, pkgSize,
+                date: new Date().toISOString().split('T')[0]
+            };
+
+            document.getElementById('res-base').innerText = base.toFixed(2) + ' ' + mode;
+            document.getElementById('res-buffer').innerText = bufferVal.toFixed(2) + ' ' + mode;
+            document.getElementById('res-total').innerText = total.toFixed(2) + ' ' + mode;
+            document.getElementById('res-pkg').innerText = pkgQty + ' ' + pkgName;
+            
+            document.getElementById('calc-result').style.display = 'block';
+        }
+
+        function saveToDashboard() {
+            if (!tempCalculation) return;
+            needs.push(tempCalculation);
+            localStorage.setItem('ops_needs', JSON.stringify(needs));
+            alert('Berhasil disimpan ke dashboard!');
+            renderDashboard();
+            switchView('dashboard', document.querySelectorAll('.nav-item')[0]);
+        }
+
+        // MODULE 2: INCOMING LOGIC
+        function showIncomingForm(editId = null) {
+            const modal = document.getElementById('modal-incoming');
+            const title = document.getElementById('modal-title');
+            document.getElementById('in-date').value = new Date().toISOString().split('T')[0];
+            
+            if (editId) {
+                const item = incoming.find(i => i.id == editId);
+                title.innerText = "Edit Barang Masuk";
+                document.getElementById('edit-id').value = item.id;
+                document.getElementById('in-date').value = item.date;
+                document.getElementById('in-name').value = item.name;
+                document.getElementById('in-mode').value = item.mode;
+                document.getElementById('in-supplier').value = item.supplier;
+                document.getElementById('in-invoice').value = item.invoice;
+                document.getElementById('in-pkg-name').value = item.pkgName;
+                document.getElementById('in-pkg-size').value = item.pkgSize;
+                document.getElementById('in-qty-pkg').value = item.qtyPkg;
+                document.getElementById('in-total-actual').value = item.totalActual;
+                document.getElementById('in-condition').value = item.condition;
+                document.getElementById('in-qty-damage').value = item.qtyDamage;
+                document.getElementById('in-damage-note').value = item.damageNote;
+                document.getElementById('in-evidence').value = item.evidence;
+                document.getElementById('in-note').value = item.note;
+                toggleDamageField();
+            } else {
+                title.innerText = "Catat Barang Masuk";
+                document.getElementById('edit-id').value = "";
+                // Reset form
+                document.querySelectorAll('#modal-incoming input, #modal-incoming textarea').forEach(i => {
+                    if(i.type !== 'date' && i.type !== 'hidden') i.value = "";
+                });
+                document.getElementById('in-qty-damage').value = 0;
+                document.getElementById('in-pkg-size').value = 1;
+                document.getElementById('in-condition').value = 'baik';
+                toggleDamageField();
+            }
+            
+            modal.classList.add('active');
+        }
+
+        function toggleDamageField() {
+            const cond = document.getElementById('in-condition').value;
+            document.getElementById('damage-fields').style.display = (cond === 'rusak') ? 'block' : 'none';
+        }
+
+        function calcIncomingTotal() {
+            const size = parseFloat(document.getElementById('in-pkg-size').value) || 0;
+            const qty = parseFloat(document.getElementById('in-qty-pkg').value) || 0;
+            document.getElementById('in-total-actual').value = (size * qty).toFixed(2);
+        }
+
+        function closeModal() {
+            document.querySelectorAll('.modal').forEach(m => m.classList.remove('active'));
+        }
+
+        function saveIncoming() {
+            const data = {
+                id: document.getElementById('edit-id').value || Date.now(),
+                date: document.getElementById('in-date').value,
+                name: document.getElementById('in-name').value,
+                mode: document.getElementById('in-mode').value,
+                supplier: document.getElementById('in-supplier').value,
+                invoice: document.getElementById('in-invoice').value,
+                pkgName: document.getElementById('in-pkg-name').value,
+                pkgSize: parseFloat(document.getElementById('in-pkg-size').value) || 0,
+                qtyPkg: parseFloat(document.getElementById('in-qty-pkg').value) || 0,
+                totalActual: parseFloat(document.getElementById('in-total-actual').value) || 0,
+                condition: document.getElementById('in-condition').value,
+                qtyDamage: parseFloat(document.getElementById('in-qty-damage').value) || 0,
+                damageNote: document.getElementById('in-damage-note').value,
+                evidence: document.getElementById('in-evidence').value,
+                note: document.getElementById('in-note').value
+            };
+
+            if (!data.name || !data.qtyPkg) { alert('Nama bahan dan jumlah wajib diisi!'); return; }
+
+            const editId = document.getElementById('edit-id').value;
+            if (editId) {
+                const idx = incoming.findIndex(i => i.id == editId);
+                incoming[idx] = data;
+            } else {
+                incoming.push(data);
+            }
+
+            localStorage.setItem('ops_incoming', JSON.stringify(incoming));
+            closeModal();
+            renderIncoming();
+            renderDashboard();
+        }
+
+        function deleteIncoming(id) {
+            if (confirm('Hapus data ini secara permanen?')) {
+                incoming = incoming.filter(i => i.id != id);
+                localStorage.setItem('ops_incoming', JSON.stringify(incoming));
+                renderIncoming();
+                renderDashboard();
+            }
+        }
+
+        function viewDetail(id) {
+            const item = incoming.find(i => i.id == id);
+            const content = `
+                <h2>Detail Penerimaan</h2>
+                <div style="margin-top:15px; font-size: 0.95rem;">
+                    <div class="list-item"><span>Tanggal</span><b>${item.date}</b></div>
+                    <div class="list-item"><span>Bahan</span><b>${item.name}</b></div>
+                    <div class="list-item"><span>Mode</span><b>${item.mode}</b></div>
+                    <div class="list-item"><span>Supplier</span><b>${item.supplier || '-'}</b></div>
+                    <div class="list-item"><span>Invoice/SJ</span><b>${item.invoice || '-'}</b></div>
+                    <div class="list-item"><span>Kemasan</span><b>${item.qtyPkg} ${item.pkgName} (@${item.pkgSize})</b></div>
+                    <div class="list-item"><span>Total Aktual</span><b style="color:var(--primary)">${item.totalActual} ${item.mode}</b></div>
+                    <div class="list-item"><span>Kondisi</span><b class="badge ${item.condition === 'baik' ? 'badge-success' : 'badge-danger'}">${item.condition}</b></div>
+                    ${item.condition === 'rusak' ? `
+                        <div class="list-item"><span>Jml Rusak</span><b style="color:var(--danger)">${item.qtyDamage}</b></div>
+                        <div class="list-item"><span>Ket. Rusak</span><b>${item.damageNote}</b></div>
+                    ` : ''}
+                    <div class="list-item"><span>Bukti</span><b>${item.evidence || '-'}</b></div>
+                    <div style="margin-top:10px;">
+                        <label>Catatan:</label>
+                        <p style="background:#f1f5f9; padding:10px; border-radius:8px;">${item.note || 'Tidak ada catatan.'}</p>
+                    </div>
+                </div>
+                <button class="btn btn-outline" style="margin-top:20px;" onclick="closeModal()">Tutup</button>
+            `;
+            document.getElementById('detail-content').innerHTML = content;
+            document.getElementById('modal-detail').classList.add('active');
+        }
+
+        // RENDERERS
+        function renderIncoming() {
+            const container = document.getElementById('incoming-list');
+            if (incoming.length === 0) {
+                container.innerHTML = '<div class="empty-state">Belum ada data barang masuk.</div>';
+                return;
+            }
+
+            container.innerHTML = incoming.sort((a,b) => new Date(b.date) - new Date(a.date)).map(item => `
+                <div class="card">
+                    <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                        <div>
+                            <span class="text-muted">${item.date}</span>
+                            <h3 style="margin-top:4px;">${item.name}</h3>
+                            <p style="margin:4px 0; font-weight:600; color:var(--primary);">${item.totalActual} ${item.mode}</p>
+                        </div>
+                        <span class="badge ${item.condition === 'baik' ? 'badge-success' : 'badge-danger'}">${item.condition}</span>
+                    </div>
+                    <div class="grid-2" style="margin-top:12px;">
+                        <button class="btn btn-outline" style="padding:8px;" onclick="viewDetail(${item.id})">Detail</button>
+                        <div style="display:flex; gap:8px;">
+                            <button class="btn btn-outline" style="padding:8px; flex:1;" onclick="showIncomingForm(${item.id})">Edit</button>
+                            <button class="btn btn-danger" style="padding:8px; flex:0.5;" onclick="deleteIncoming(${item.id})">×</button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function renderDashboard() {
+            // Stats
+            document.getElementById('dash-total-items').innerText = needs.length;
+            
+            const today = new Date().toISOString().split('T')[0];
+            const incomingToday = incoming.filter(i => i.date === today);
+            document.getElementById('dash-total-incoming').innerText = incomingToday.length;
+
+            // Alerts
+            const alertsCont = document.getElementById('dash-alerts');
+            alertsCont.innerHTML = "";
+
+            // Damage Alert
+            const damaged = incoming.filter(i => i.condition === 'rusak');
+            if (damaged.length > 0) {
+                alertsCont.innerHTML += `
+                    <div style="background:#fff1f2; color:#991b1b; padding:12px; border-radius:8px; margin-bottom:10px; border-left:4px solid var(--danger);">
+                        <b>⚠️ Alert Kerusakan:</b> Ada ${damaged.length} barang masuk dengan kondisi rusak.
+                    </div>
+                `;
+            }
+
+            // Shortage Alert Logic (Check matches between Needs vs Incoming)
+            let alertsFound = false;
+            needs.forEach(need => {
+                const totalIn = incoming
+                    .filter(i => i.name.toLowerCase() === need.name.toLowerCase() && i.mode === need.mode)
+                    .reduce((sum, i) => sum + i.totalActual, 0);
+                
+                if (totalIn < need.total) {
+                    alertsFound = true;
+                    alertsCont.innerHTML += `
+                        <div style="background:#fffbeb; color:#92400e; padding:12px; border-radius:8px; margin-bottom:10px; border-left:4px solid var(--warning);">
+                            <b>⚠️ Kurang:</b> ${need.name} (${totalIn.toFixed(1)}/${need.total.toFixed(1)} ${need.mode})
+                        </div>
+                    `;
+                }
+            });
+
+            if (!alertsFound && damaged.length === 0) {
+                alertsCont.innerHTML = '<p class="text-muted">Semua operasional berjalan normal hari ini.</p>';
+            }
+
+            // Summary List
+            const summaryCont = document.getElementById('dash-summary-list');
+            if (needs.length === 0) {
+                summaryCont.innerHTML = '<div class="empty-state">Belum ada kalkulasi kebutuhan.</div>';
+            } else {
+                summaryCont.innerHTML = needs.map(need => {
+                    const totalIn = incoming
+                        .filter(i => i.name.toLowerCase() === need.name.toLowerCase() && i.mode === need.mode)
+                        .reduce((sum, i) => sum + i.totalActual, 0);
+                    const diff = totalIn - need.total;
+                    const isEnough = diff >= 0;
+
+                    return `
+                        <div class="card" style="padding:12px; border-left: 4px solid ${isEnough ? 'var(--success)' : 'var(--danger)'}">
+                            <div style="display:flex; justify-content:space-between; align-items:center;">
+                                <b>${need.name}</b>
+                                <button onclick="deleteNeed(${need.id})" style="background:none; border:none; color:var(--danger); font-size:1.2rem;">&times;</button>
+                            </div>
+                            <div class="grid-2 text-muted" style="margin-top:4px;">
+                                <span>Butuh: ${need.total.toFixed(1)}</span>
+                                <span>Masuk: ${totalIn.toFixed(1)}</span>
+                            </div>
+                            <div style="margin-top:8px; font-weight:700; color: ${isEnough ? 'var(--success)' : 'var(--danger)'}">
+                                ${isEnough ? '✓ CUKUP' : '❌ KURANG ' + Math.abs(diff).toFixed(1)} ${need.mode}
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+        }
+
+        function deleteNeed(id) {
+            if(confirm('Hapus kalkulasi ini dari dashboard?')) {
+                needs = needs.filter(n => n.id != id);
+                localStorage.setItem('ops_needs', JSON.stringify(needs));
+                renderDashboard();
+            }
+        }
+    </script>
+</body>
+</html>
+
