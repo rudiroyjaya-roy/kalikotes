@@ -460,11 +460,11 @@
                 date: new Date().toISOString().split('T')[0]
             };
             
+            document.getElementById('res-base').innerText = base.toFixed(2) + ' ' + mode;
+            document.getElementById('res-buffer').innerText = bufferVal.toFixed(2) + ' ' + mode;
+            document.getElementById('res-total').innerText = total.toFixed(2) + ' ' + mode;
             
-            document.getElementById('res-base').innerText = formatNumber(base) + ' ' + mode;
-            document.getElementById('res-buffer').innerText = formatNumber(bufferVal) + ' ' + mode;
-            document.getElementById('res-total').innerText = formatNumber(total) + ' ' + mode;
-
+            
             document.getElementById('res-pkg').innerText = pkgQty + ' ' + pkgName;
             
             document.getElementById('calc-result').style.display = 'block';
